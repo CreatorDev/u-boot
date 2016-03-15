@@ -31,6 +31,7 @@ CONFIG_BUILD_ENVCRC ?= $(ENVCRC-y)
 
 hostprogs-$(CONFIG_SPL_GENERATE_ATMEL_PMECC_HEADER) += atmel_pmecc_params
 
+hostprogs-y+= bimgtool
 # TODO: CONFIG_CMD_LICENSE does not work
 hostprogs-$(CONFIG_CMD_LICENSE) += bin2header
 hostprogs-$(CONFIG_LCD_LOGO) += bmp_logo

@@ -63,6 +63,7 @@ static int uclass_add(enum uclass_id id, struct uclass **ucp)
 	uc = calloc(1, sizeof(*uc));
 	if (!uc)
 		return -ENOMEM;
+
 	if (uc_drv->priv_auto_alloc_size) {
 		uc->priv = calloc(1, uc_drv->priv_auto_alloc_size);
 		if (!uc->priv) {

@@ -53,6 +53,10 @@ static inline int arch_is_kernel_data(unsigned long addr)
 /* Start of U-Boot text region */
 extern char __text_start[];
 
+#ifdef CONFIG_MIPS
+extern char __text_end[];
+#endif
+
 /* This marks the end of the text region which must be relocated */
 extern char __image_copy_end[];
 

@@ -25,10 +25,12 @@
 
 #ifdef CONFIG_DM_SERIAL
 /*
- * For driver model we always use one byte per register, and sort out the
+ * TODO: For driver model we always use one byte per register, and sort out the
  * differences in the driver
  */
+#ifndef CONFIG_SYS_NS16550_REG_SIZE
 #define CONFIG_SYS_NS16550_REG_SIZE (-1)
+#endif
 #endif
 
 #if !defined(CONFIG_SYS_NS16550_REG_SIZE) || (CONFIG_SYS_NS16550_REG_SIZE == 0)

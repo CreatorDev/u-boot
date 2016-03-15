@@ -76,6 +76,8 @@ static const char * const compat_names[COMPAT_COUNT] = {
 	COMPAT(SOCIONEXT_XHCI, "socionext,uniphier-xhci"),
 	COMPAT(COMPAT_INTEL_PCH, "intel,bd82x6x"),
 	COMPAT(COMPAT_INTEL_IRQ_ROUTER, "intel,irq-router"),
+	COMPAT(GIGADEVICE_NAND_GD5F, "gigadevice,gd5f"),
+	COMPAT(MICRON_NAND_MT29, "micron,mt29")
 };
 
 const char *fdtdec_get_compatible(enum fdt_compat_id id)
@@ -1138,7 +1140,7 @@ int fdtdec_setup(void)
 	/* Get a pointer to the FDT */
 	gd->fdt_blob = __dtb_dt_begin;
 # elif defined CONFIG_OF_SEPARATE
-#  ifdef CONFIG_SPL_BUILD
+#  if defined(CONFIG_SPL_BUILD) && !defined(CONFIG_MIPS)
 	/* FDT is at end of BSS */
 	gd->fdt_blob = (ulong *)&__bss_end;
 #  else

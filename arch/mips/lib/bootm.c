@@ -5,10 +5,11 @@
  * SPDX-License-Identifier:	GPL-2.0+
  */
 
+#include <asm/addrspace.h>
 #include <common.h>
 #include <image.h>
 #include <fdt_support.h>
-#include <asm/addrspace.h>
+#include <malloc.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -87,18 +88,52 @@ static int boot_setup_linux(bootm_headers_t *images)
 	return 0;
 }
 
+#if defined(CONFIG_MIPS_BOOT_FDT) && defined(CONFIG_OF_LIBFDT)
+static void *ensure_space(void *fdt, int extra_size)
+{
+	int used, size, remaining;
+	void *buf;
+
+	used = fdt_off_dt_strings(fdt) + fdt_size_dt_strings(fdt);
+	size = fdt_totalsize(fdt);
+	remaining = size - used;
+	if (remaining > extra_size)
+		return fdt;
+
+	size = used + extra_size;
+	buf = malloc(size);
+	if (!buf)
+		return fdt;
+
+	if (fdt_open_into(fdt, buf, size)) {
+		free(buf);
+		return NULL;
+	}
+
+	return buf;
+}
+#endif
+
 static void boot_setup_fdt(bootm_headers_t *images)
 {
 #if defined(CONFIG_MIPS_BOOT_FDT) && defined(CONFIG_OF_LIBFDT)
+#define MIN_PROPERTY_SPACE 	1024*1024
+
 	u64 mem_start = 0;
 	u64 mem_size = gd->ram_size;
 
 	debug("## setup FDT\n");
 
-	fdt_chosen(images->ft_addr, 1);
+	images->ft_addr = ensure_space(images->ft_addr,
+				MIN_PROPERTY_SPACE);
+	if (!images->ft_addr) {
+		error("Failed to allocate memory for FDT.\n");
+		return;
+	}
+	fdt_chosen(images->ft_addr);
 	fdt_fixup_memory_banks(images->ft_addr, &mem_start, &mem_size, 1);
 	fdt_fixup_ethernet(images->ft_addr);
-	fdt_initrd(images->ft_addr, images->initrd_start, images->initrd_end, 1);
+	fdt_initrd(images->ft_addr, images->initrd_start, images->initrd_end);
 
 #if defined(CONFIG_OF_BOARD_SETUP)
 	ft_board_setup(images->ft_addr, gd->bd);

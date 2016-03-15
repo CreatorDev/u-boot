@@ -638,6 +638,7 @@ libs-$(CONFIG_CMD_NAND) += drivers/mtd/nand/
 libs-y += drivers/mtd/onenand/
 libs-$(CONFIG_CMD_UBI) += drivers/mtd/ubi/
 libs-y += drivers/mtd/spi/
+libs-y += drivers/mtd/spi-nand/
 libs-y += drivers/net/
 libs-y += drivers/net/phy/
 libs-y += drivers/pci/
@@ -763,6 +764,23 @@ ifeq ($(CONFIG_OF_SEPARATE),y)
 ALL-y += u-boot-dtb-tegra.bin
 else
 ALL-y += u-boot-nodtb-tegra.bin
+endif
+endif
+endif
+
+ifeq ($(CONFIG_MIPS),y)
+ifeq ($(CONFIG_SPL),y)
+ifeq ($(CONFIG_TARGET_PISTACHIO_BUB),y)
+ALL-y += u-boot-pistachio-nor.img
+endif
+ifeq ($(CONFIG_TARGET_PISTACHIO_BEETLE),y)
+ALL-y += u-boot-pistachio-nor.img
+endif
+ifeq ($(CONFIG_TARGET_PISTACHIO_MARDUK),y)
+ALL-y += u-boot-pistachio-nor.img
+endif
+ifeq ($(CONFIG_TARGET_PISTACHIO_CONCERTO),y)
+ALL-y += u-boot-pistachio-nor.img
 endif
 endif
 endif
@@ -897,6 +915,12 @@ u-boot.img u-boot.kwb u-boot.pbl: u-boot.bin FORCE
 u-boot-spl.kwb: u-boot.img spl/u-boot-spl.bin FORCE
 	$(call if_changed,mkimage)
 
+u-boot-spl-dtb.bin: spl/u-boot-spl.bin dts/dt.dtb FORCE
+	$(call if_changed,cat)
+
+u-boot-spl-pistachio.bimg: u-boot-spl-dtb.bin FORCE
+	tools/bimgtool $< $@ $(CONFIG_SYS_GRAM_BASE)
+
 MKIMAGEFLAGS_u-boot-dtb.img = $(MKIMAGEFLAGS_u-boot.img)
 
 u-boot-dtb.img: u-boot-dtb.bin FORCE
@@ -1004,6 +1028,13 @@ MKIMAGEFLAGS_u-boot-nand.gph = -A $(ARCH) -T gpimage -C none \
 u-boot-nand.gph: u-boot.bin FORCE
 	$(call if_changed,mkimage)
 	@dd if=/dev/zero bs=8 count=1 2>/dev/null >> $@
+
+DEC_UBOOT_OFF:=$(shell $(PERL) -e 'print hex("$(CONFIG_SYS_SPI_U_BOOT_OFFS)");')
+# 512KB of the flash reserved for SPL and 1MB for u-boot payload
+u-boot-pistachio-nor.img: u-boot-dtb.img u-boot-spl-pistachio.bimg FORCE
+	@dd if=/dev/zero of=$@ bs=4K count=384 conv=notrunc
+	@dd if=u-boot-spl-pistachio.bimg of=$@ bs=4K count=128 conv=notrunc
+	@dd if=u-boot-dtb.img of=$@ bs=4K count=256 seek=128 conv=notrunc
 
 # x86 uses a large ROM. We fill it with 0xff, put the 16-bit stuff (including
 # reset vector) at the top, Intel ME descriptor at the bottom, and U-Boot in

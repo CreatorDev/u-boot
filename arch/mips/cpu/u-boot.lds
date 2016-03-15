@@ -19,10 +19,12 @@ SECTIONS
 
 	. = ALIGN(4);
 	.text : {
+		__text_start = .;
 		*(.text*)
+		. = ALIGN(8192);
+		__text_end = .;
 	}
 
-	. = ALIGN(4);
 	.rodata : {
 		*(SORT_BY_ALIGNMENT(SORT_BY_NAME(.rodata*)))
 	}

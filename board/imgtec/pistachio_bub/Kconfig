@@ -1,0 +1,51 @@
+if TARGET_PISTACHIO_BUB
+
+config SYS_BOARD
+	default "pistachio_bub"
+
+config SYS_VENDOR
+	default "imgtec"
+
+config SYS_CONFIG_NAME
+	default "pistachio_bub"
+
+endif
+
+if TARGET_PISTACHIO_MARDUK
+
+config SYS_BOARD
+	default "pistachio_bub"
+
+config SYS_VENDOR
+	default "imgtec"
+
+config SYS_CONFIG_NAME
+	default "pistachio_marduk"
+
+endif
+
+if TARGET_PISTACHIO_BEETLE
+
+config SYS_BOARD
+	default "pistachio_bub"
+
+config SYS_VENDOR
+	default "imgtec"
+
+config SYS_CONFIG_NAME
+	default "pistachio_beetle"
+
+endif
+
+if TARGET_PISTACHIO_CONCERTO
+
+config SYS_BOARD
+	default "pistachio_bub"
+
+config SYS_VENDOR
+	default "imgtec"
+
+config SYS_CONFIG_NAME
+	default "pistachio_concerto"
+
+endif

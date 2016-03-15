@@ -1,0 +1,15 @@
+menu "SPI NAND Device Support"
+
+config MTD_SPI_NAND
+	bool "SPI NAND device support"
+	help
+	  This is the framework for the SPI NAND.
+
+config MTD_SPI_NAND_DEVICES
+	bool "Support for SPI NAND devices (MT29F, GD5F)"
+	depends on MTD_SPI_NAND
+	help
+	  Select this option if you require support for the most common SPI NAND
+	  devices such as mt29f and gd5f.
+
+endmenu

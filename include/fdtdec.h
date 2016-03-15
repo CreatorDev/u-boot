@@ -183,6 +183,8 @@ enum fdt_compat_id {
 	COMPAT_SOCIONEXT_XHCI,		/* Socionext UniPhier xHCI */
 	COMPAT_INTEL_PCH,		/* Intel PCH */
 	COMPAT_INTEL_IRQ_ROUTER,	/* Intel Interrupt Router */
+	COMPAT_GIGADEVICE_NAND_GD5F,	/* Gigadevice GD5F NAND SPI flash */
+	COMPAT_MICRON_NAND_MT29,	/* Micron MT29 NAND SPI flash */
 
 	COMPAT_COUNT,
 };

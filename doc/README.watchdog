@@ -33,3 +33,15 @@ CONFIG_XILINX_TB_WATCHDOG
 
 CONFIG_BFIN_WATCHDOG
 	Available for bf5xx and bf6xx to service the watchdog.
+
+CONFIG_PISTACHIO_WATCHDOG
+	Available for pistachio to service the watchdog.
+	one needs to define following configs to have full watchdog support
+	CONFIG_HW_WATCHDOG
+	CONFIG_PISTACHIO_WATCHDOG
+	CONFIG_SPL_WATCHDOG_SUPPORT
+	CONFIG_BOARD_LATE_INIT
+
+CONFIG_PISTACHIO_WATCHDOG_TIMEOUT_SEC
+	Can be used to change the timeout for pistachio watchdog.
+	Actual timeout may vary please check comment header in drivers/watchdog/pistachio_wdt.c

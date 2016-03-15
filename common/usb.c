@@ -1073,6 +1073,7 @@ int usb_select_config(struct usb_device *dev)
 {
 	ALLOC_CACHE_ALIGN_BUFFER(unsigned char, tmpbuf, USB_BUFSIZ);
 	int err;
+	int timeout = USB_CNTL_TIMEOUT;
 
 	err = get_descriptor_len(dev, USB_DT_DEVICE_SIZE, USB_DT_DEVICE_SIZE);
 	if (err)
@@ -1085,7 +1086,12 @@ int usb_select_config(struct usb_device *dev)
 	le16_to_cpus(&dev->descriptor.bcdDevice);
 
 	/* only support for one config for now */
-	err = usb_get_configuration_no(dev, tmpbuf, 0);
+	while (timeout--) {
+		/* repeat read of config until successful or it times out */
+		err = usb_get_configuration_no(dev, tmpbuf, 0);
+		if (err >= 0)
+			break;
+	}
 	if (err < 0) {
 		printf("usb_new_device: Cannot read configuration, " \
 		       "skipping device %04x:%04x\n",

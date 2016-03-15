@@ -16,9 +16,14 @@
 #define CONFIG_SYS_MIPS_CACHE_MODE CONF_CM_CACHABLE_NONCOHERENT
 #endif
 
+#ifndef CONFIG_SPL_BUILD
 #ifndef CONFIG_SYS_INIT_SP_ADDR
 #define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_SYS_SDRAM_BASE + \
 				CONFIG_SYS_INIT_SP_OFFSET)
+#endif
+#else
+#define CONFIG_SYS_INIT_SP_ADDR (CONFIG_SYS_SRAM_BASE + \
+				CONFIG_SYS_SRAM_SIZE)
 #endif
 
 #ifdef CONFIG_32BIT
@@ -162,6 +167,23 @@ reset:
 	mtc0	t0, CP0_CONFIG
 #endif
 
+#ifdef CONFIG_SPL_BUILD
+
+	/* Initialize bss */
+	la	t0, __bss_start
+	move	k0, t0
+	sw	zero, (t0)
+	la	t1, __bss_end - 4
+	blt	t1, t0, stack
+	nop
+clear_bss:
+	addiu	t0, 4
+	sw	zero, (t0)
+	bne	t0, t1, clear_bss
+	nop
+#endif
+
+stack:
 	/* Set up temporary stack */
 	PTR_LI	t0, -16
 	PTR_LI	t1, CONFIG_SYS_INIT_SP_ADDR
@@ -188,9 +210,18 @@ reset:
 	sw	sp, 0(t0)
 #endif
 
+#ifdef CONFIG_IGNORE_BOOT_FLAG
+	move	a0, zero
+#endif
+
 	PTR_LA	t9, board_init_f
 	jr	t9
 	 move	ra, zero
+
+/* Hang for debugging purposes */
+loop:	nop
+	b	loop
+	nop
 
 /*
  * void relocate_code (addr_sp, gd, addr_moni)

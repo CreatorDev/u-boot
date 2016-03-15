@@ -218,8 +218,9 @@ static int i2c_probe_chip(struct udevice *bus, uint chip_addr,
 			  enum dm_i2c_chip_flags chip_flags)
 {
 	struct dm_i2c_ops *ops = i2c_get_ops(bus);
-	struct i2c_msg msg[1];
+	struct i2c_msg msg[2];
 	int ret;
+	u8 data = 0;
 
 	if (ops->probe_chip) {
 		ret = ops->probe_chip(bus, chip_addr, chip_flags);
@@ -230,13 +231,19 @@ static int i2c_probe_chip(struct udevice *bus, uint chip_addr,
 	if (!ops->xfer)
 		return -ENOSYS;
 
-	/* Probe with a zero-length message */
-	msg->addr = chip_addr;
-	msg->flags = chip_flags & DM_I2C_CHIP_10BIT ? I2C_M_TEN : 0;
-	msg->len = 0;
-	msg->buf = NULL;
+	/* Try to read from offset 0 */
+	msg[0].addr = chip_addr;
+	msg[0].flags = chip_flags & DM_I2C_CHIP_10BIT ? I2C_M_TEN : 0;
+	msg[0].len = 1;
+	msg[0].buf = &data;
 
-	return ops->xfer(bus, msg, 1);
+	msg[1].addr = chip_addr;
+	msg[1].flags = chip_flags & DM_I2C_CHIP_10BIT ? I2C_M_TEN : 0;
+	msg[1].flags |= I2C_M_RD;
+	msg[1].len = 1;
+	msg[1].buf = &data;
+
+	return ops->xfer(bus, msg, 2);
 }
 
 static int i2c_bind_driver(struct udevice *bus, uint chip_addr, uint offset_len,

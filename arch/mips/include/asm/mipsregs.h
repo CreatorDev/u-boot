@@ -1365,6 +1365,63 @@ __BUILD_SET_C0(intcontrol)
 __BUILD_SET_C0(intctl)
 __BUILD_SET_C0(srsmap)
 
-#endif /* !__ASSEMBLY__ */
 
+#define C0_ENTRYLO_COHERENCY_MASK 0x00000038
+#define C0_ENTRYLO_PFN_SHIFT 6
+#define C0_ENTRYLO_WB (0x3 << 3) /* Cacheable, write-back, non-coherent */
+#define C0_ENTRYLO_UCA (0x7 << 3) /* Uncached accelerated, non-coherent */
+#define C0_ENTRYLO_UC (0x2 << 3) /* Uncached, coherent */
+#define C0_ENTRYLO_D (0x1 << 2) /* Writeable */
+#define C0_ENTRYLO_V (0x1 << 1) /* Valid */
+#define C0_ENTRYLO_G (0x1 << 0) /* Global */
+
+#define C0_PAGEMASK_SHIFT 13
+#define C0_PAGEMASK_MASK 0xffff
+
+#define C0_WIRED_MASK 0x3f
+
+#define C0_CAUSE_DC (1 << 27)
+
+#define C0_CONFIG1_MMUSIZE_SHIFT 25
+#define C0_CONFIG1_MMUSIZE_MASK 0x3f
+
+/* Hazard handling */
+static inline void __nop(void)
+{
+        __asm__ __volatile__("nop");
+}
+
+static inline void __ssnop(void)
+{
+        __asm__ __volatile__("sll\t$0, $0, 1");
+}
+
+#define mtc0_tlbw_hazard()                                              \
+do {                                                                    \
+        __nop();                                                        \
+        __nop();                                                        \
+} while (0)
+
+#define tlbw_use_hazard()                                               \
+do {                                                                    \
+        __nop();                                                        \
+        __nop();                                                        \
+        __nop();                                                        \
+} while (0)
+
+#define tlb_probe_hazard()                                              \
+do {                                                                    \
+        __nop();                                                        \
+        __nop();                                                        \
+        __nop();                                                        \
+} while (0)
+
+#define back_to_back_c0_hazard()                                        \
+do {                                                                    \
+        __ssnop();                                                      \
+        __ssnop();                                                      \
+        __ssnop();                                                      \
+} while (0)
+
+#endif /* !__ASSEMBLY__ */
 #endif /* _ASM_MIPSREGS_H */

@@ -927,7 +927,8 @@ static int do_i2c_probe (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv
 		addr = simple_strtol(argv[1], 0, 16);
 
 	puts ("Valid chip addresses:");
-	for (j = 0; j < 128; j++) {
+	/* Valid addresses on the i2c bus are in the 8..119 range. */
+	for (j = 8; j < 120; j++) {
 		if ((0 <= addr) && (j != addr))
 			continue;
 

@@ -30,6 +30,10 @@
 #include <u-boot/sha256.h>
 #include <u-boot/md5.h>
 
+#ifdef CONFIG_DEV_IMGTEC_HASH
+#include <img_hash.h>
+#endif
+
 #ifdef CONFIG_SHA1
 static int hash_init_sha1(struct hash_algo *algo, void **ctxp)
 {
@@ -112,6 +116,33 @@ static int hash_finish_crc32(struct hash_algo *algo, void *ctx, void *dest_buf,
 	return 0;
 }
 
+#ifdef CONFIG_DEV_IMGTEC_HASH
+
+/*
+ * Hardware hashing solutions do not use the init, update and finish functions
+ * Therefore the following three dummy functions are created
+ */
+static int hw_dummy_init(struct hash_algo *algo, void **ctxp)
+{
+	debug("Warning, function hw_dummy_init is not supported\n");
+	return 0;
+}
+
+static int hw_dummy_update(struct hash_algo *algo, void *ctx,
+			   const void *buf, unsigned int size, int is_last)
+{
+	debug("Warning, function hw_dummy_update is not supported\n");
+	return 0;
+}
+
+static int hw_dummy_finish(struct hash_algo *algo, void *ctx, void *dest_buf,
+			   int size)
+{
+	debug("Warning, function hw_dummy_finish is not supported\n");
+	return 0;
+}
+#endif
+
 /*
  * These are the hash algorithms we support. Chips which support accelerated
  * crypto could perhaps add named version of these algorithms here. Note that
@@ -165,6 +196,41 @@ static struct hash_algo hash_algo[] = {
 		hash_init_sha256,
 		hash_update_sha256,
 		hash_finish_sha256,
+	},
+#endif
+#ifdef CONFIG_DEV_IMGTEC_HASH
+	{
+		"hwsha1",
+		SHA1_DIGEST_SIZE,
+		imgtec_hwsha1,
+		CHUNKSZ_DUMMY,
+		hw_dummy_init,
+		hw_dummy_update,
+		hw_dummy_finish,
+	}, {
+		"hwsha256",
+		SHA256_DIGEST_SIZE,
+		imgtec_hwsha256,
+		CHUNKSZ_DUMMY,
+		hw_dummy_init,
+		hw_dummy_update,
+		hw_dummy_finish,
+	}, {
+		"hwsha224",
+		SHA224_DIGEST_SIZE,
+		imgtec_hwsha224,
+		CHUNKSZ_DUMMY,
+		hw_dummy_init,
+		hw_dummy_update,
+		hw_dummy_finish,
+	}, {
+		"hwmd5",
+		MD5_DIGEST_SIZE,
+		imgtec_hwmd5,
+		CHUNKSZ_DUMMY,
+		hw_dummy_init,
+		hw_dummy_update,
+		hw_dummy_finish,
 	},
 #endif
 	{

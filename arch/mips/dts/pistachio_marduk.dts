@@ -1,0 +1,143 @@
+/*
+ * Copyright (C) 2015 Imagination Technologies Ltd.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+
+/dts-v1/;
+
+#include "pistachio.dtsi"
+
+/ {
+	model = "IMG Marduk";
+	compatible = "img,pistachio-marduk", "img,pistachio";
+
+	aliases {
+		console ="/uart@18101500";
+		serial0 = &uart0;
+		serial1 = &uart1;
+		ethernet0 = &enet;
+	};
+
+	chosen {
+		bootargs = "console=ttyS1,115200n8 earlycon=uart8250,mmio32,0x18101500,115200 root=/dev/sda1 rootwait ro";
+		stdout-path = &uart1;
+	};
+
+	memory {
+		device_type = "memory";
+		reg =  <0x00000000 0x10000000>;
+	};
+
+	reg_1v8: fixed-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "aux_adc_vref";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		regulator-boot-on;
+	};
+};
+
+&spfi1 {
+	status = "okay";
+
+	pinctrl-0 = <&spim1_pins>, <&spim1_quad_pins>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpio0 0 GPIO_ACTIVE_HIGH>, <&gpio0 1 GPIO_ACTIVE_HIGH>;
+
+	flash@0 {
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <50000000>;
+	};
+
+	flash@1 {
+		compatible = "gigadevice,gd5f";
+		reg = <1>;
+		spi-max-frequency = <50000000>;
+		nand-on-flash-bbt;
+		#address-cells = <1>;
+		#size-cells = <1>;
+	};
+};
+
+&uccphostport {
+	status = "okay";
+};
+
+&uccpdummyhp {
+	status = "okay";
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&uart1 {
+	status = "okay";
+};
+
+&usb {
+	status = "okay";
+};
+
+&enet {
+	status = "okay";
+
+	mac-address = [0123456789AB];
+};
+
+&sdhost {
+	status = "okay";
+
+	bus-width = <4>;
+	disable-wp;
+};
+
+&ir {
+	status = "okay";
+};
+
+&pwm {
+	status = "okay";
+
+	pinctrl-0 = <&pwmpdm0_pin>, <&pwmpdm1_pin>, <&pwmpdm2_pin>,
+		    <&pwmpdm3_pin>;
+	pinctrl-names = "default";
+};
+
+&adc {
+	status = "okay";
+	vref-supply = <&reg_1v8>;
+};
+
+&i2c0 {
+	status = "okay";
+	clock-frequency = <400000>;
+};
+
+&i2c1 {
+	status = "okay";
+	clock-frequency = <400000>;
+};
+
+&i2c2 {
+	status = "okay";
+	clock-frequency = <400000>;
+};
+
+&i2c3 {
+	status = "okay";
+	clock-frequency = <400000>;
+};
+
+&wifi {
+       status = "okay";
+       mac-address0 = [0123456789AC];
+       mac-address1 = [0123456789AD];
+       rf-params = [1E00000000002426292A2C2E3237393F454A52576066000000002B2C3033373A3D44474D51575A61656B6F000000002B2C3033373A3D44474D51575A61656B6F000000002B2C3033373A3D44474D51575A61656B6F000000002B2C3033373A3D44474D51575A61656B6F00000000002426292A2C2E3237393F454A52576066000000002B2C3033373A3D44474D51575A61656B6F000000002B2C3033373A3D44474D51575A61656B6F000000002B2C3033373A3D44474D51575A61656B6F000000002B2C3033373A3D44474D51575A61656B6F0808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808];
+       num_streams = [02];
+};
+

@@ -634,6 +634,8 @@ struct nand_buffers {
  * @ecc_step_ds:	[INTERN] ECC step required by the @ecc_strength_ds,
  *                      also from the datasheet. It is the recommended ECC step
  *			size, if known; if unknown, set to zero.
+ * @ecc.layout:		If the device has on-die ECC, it can provide its own ECC
+ * 			layout.
  * @numchips:		[INTERN] number of physical chips
  * @chipsize:		[INTERN] the size of one chip for multichip arrays
  * @pagemask:		[INTERN] page number mask = number of (pages / chip) - 1
@@ -767,6 +769,7 @@ struct nand_chip {
 #define NAND_MFR_EON		0x92
 #define NAND_MFR_SANDISK	0x45
 #define NAND_MFR_INTEL		0x89
+#define NAND_MFR_GIGADEVICE	0xc8
 
 /* The maximum expected count of bytes in the NAND ID sequence */
 #define NAND_MAX_ID_LEN 8
@@ -841,6 +844,7 @@ struct nand_flash_dev {
 	struct {
 		uint16_t strength_ds;
 		uint16_t step_ds;
+		struct nand_ecclayout *layout;
 	} ecc;
 };
 

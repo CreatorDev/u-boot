@@ -92,6 +92,7 @@ __weak void yellow_led_on(void) {}
 __weak void yellow_led_off(void) {}
 __weak void blue_led_on(void) {}
 __weak void blue_led_off(void) {}
+__weak int reloc_tlb_fixup(void) { return 0; }
 
 /*
  * Why is gd allocated a register? Prior to reloc it might be better to
@@ -450,6 +451,10 @@ static int reserve_uboot(void)
 	 */
 	gd->relocaddr -= gd->mon_len;
 	gd->relocaddr &= ~(4096 - 1);
+#ifdef CONFIG_MIPS
+	/* Round down to next 8KB limit necessary for MMU mapping*/
+	gd->relocaddr &= ~(8192 - 1);
+#endif
 #ifdef CONFIG_E500
 	/* round down to next 64 kB limit so that IVPR stays aligned */
 	gd->relocaddr &= ~(65536 - 1);
@@ -903,6 +908,9 @@ static init_fnc_t init_sequence_f[] = {
 #endif
 #if !defined(CONFIG_BLACKFIN) && !defined(CONFIG_NIOS2)
 	reserve_uboot,
+#endif
+#ifdef CONFIG_MIPS
+	reloc_tlb_fixup,
 #endif
 #ifndef CONFIG_SPL_BUILD
 	reserve_malloc,

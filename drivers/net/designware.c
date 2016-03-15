@@ -246,7 +246,9 @@ static int _dw_eth_init(struct dw_eth_dev *priv, u8 *enetaddr)
 	rx_descs_init(priv);
 	tx_descs_init(priv);
 
+#ifndef CONFIG_PISTACHIO_DW_MAC
 	writel(FIXEDBURST | PRIORXTX_41 | DMA_PBL, &dma_p->busmode);
+#endif
 
 #ifndef CONFIG_DW_MAC_FORCE_THRESHOLD_MODE
 	writel(readl(&dma_p->opmode) | FLUSHTXFIFO | STOREFORWARD,
@@ -256,11 +258,16 @@ static int _dw_eth_init(struct dw_eth_dev *priv, u8 *enetaddr)
 	       &dma_p->opmode);
 #endif
 
-	writel(readl(&dma_p->opmode) | RXSTART | TXSTART, &dma_p->opmode);
-
 #ifdef CONFIG_DW_AXI_BURST_LEN
 	writel((CONFIG_DW_AXI_BURST_LEN & 0x1FF >> 1), &dma_p->axibus);
 #endif
+
+#ifdef CONFIG_PISTACHIO_DW_MAC
+	writel(0x062020E2, &dma_p->opmode);
+	writel(0x01024100, &dma_p->busmode);
+#endif
+
+	writel(readl(&dma_p->opmode) | RXSTART | TXSTART, &dma_p->opmode);
 
 	/* Start up the PHY */
 	ret = phy_startup(priv->phydev);
@@ -277,6 +284,10 @@ static int _dw_eth_init(struct dw_eth_dev *priv, u8 *enetaddr)
 
 	writel(readl(&mac_p->conf) | RXENABLE | TXENABLE, &mac_p->conf);
 
+#ifdef CONFIG_PISTACHIO_DW_MAC
+	writel(readl(&mac_p->conf) | 0x028CC8BC, &mac_p->conf);
+	writel(readl(&mac_p->framefilt) | 0x80000081, &mac_p->framefilt);
+#endif
 	return 0;
 }
 
@@ -558,7 +569,8 @@ static int designware_eth_probe(struct udevice *dev)
 	struct dw_eth_dev *priv = dev_get_priv(dev);
 	int ret;
 
-	debug("%s, iobase=%lx, priv=%p\n", __func__, pdata->iobase, priv);
+	debug("%s, iobase=%lx, priv=%p\n", __func__,
+			(unsigned long int)pdata->iobase, priv);
 	priv->mac_regs_p = (struct eth_mac_regs *)pdata->iobase;
 	priv->dma_regs_p = (struct eth_dma_regs *)(pdata->iobase +
 			DW_DMA_BASE_OFFSET);
@@ -602,6 +614,7 @@ static int designware_eth_ofdata_to_platdata(struct udevice *dev)
 
 static const struct udevice_id designware_eth_ids[] = {
 	{ .compatible = "allwinner,sun7i-a20-gmac" },
+	{ .compatible = "snps,dwmac"},
 	{ }
 };
 
