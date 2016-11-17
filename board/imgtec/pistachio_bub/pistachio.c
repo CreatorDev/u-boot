@@ -21,11 +21,12 @@
 #include <asm-generic/sections.h>
 #include <watchdog.h>
 #include <tpm.h>
-
+#include <winbond-otp.h>
 #include "mfio.h"
 
+#define ETH_MAC_ADDRESS_OFFSET          0x1015 /* Ethernet MAC address offset */
+
 DECLARE_GLOBAL_DATA_PTR;
-const char *enet_dtb_macaddr = 0;
 
 int reloc_tlb_fixup(void)
 {
@@ -84,47 +85,22 @@ int print_cpuinfo(void)
 	return 0;
 }
 
-#ifdef CONFIG_OF_CONTROL
-static const char *get_dtb_macaddr(u32 ifno)
-{
-	int node, len;
-	char enet[16];
-	const char *mac, *path;
-
-	node = fdt_path_offset(gd->fdt_blob, "/aliases");
-	if (node < 0) {
-		printf("\n enet0: no /aliases found in dtb \n");
-		return NULL;
-	}
-
-	sprintf(enet, "ethernet%d", ifno);
-	path = fdt_getprop(gd->fdt_blob, node, enet, NULL);
-	if (!path) {
-		printf("enet0: enet0 alias not found \n");
-		return NULL;
-	}
-
-	node = fdt_path_offset(gd->fdt_blob, path);
-	mac = fdt_getprop(gd->fdt_blob, node, "mac-address", &len);
-	if (mac && is_valid_ethaddr((u8 *)mac))
-		return mac;
-
-        return NULL;
-}
-#endif
-
 int board_eth_init(bd_t *bs)
 {
 	mfio_setup_ethernet();
+	/* try to read macaddr from OTP */
 
-	/* try to get a valid macaddr from dtb */
-#ifdef CONFIG_OF_CONTROL
-	enet_dtb_macaddr = get_dtb_macaddr(0);
+#ifdef CONFIG_WINBOND_OTP
+	u_char eth_addr[MAC_ADDR_LEN];
 
-	if (enet_dtb_macaddr)
-		eth_setenv_enetaddr("ethaddr", (u8 *)enet_dtb_macaddr);
-	else
-		printf("No valid Mac-addr found from dtb\n");
+	memset(eth_addr, '\0', MAC_ADDR_LEN);
+	if (!read_otp_data(ETH_MAC_ADDRESS_OFFSET, MAC_ADDR_LEN, (char *)eth_addr) &&
+						is_valid_ethaddr(eth_addr)) {
+		eth_setenv_enetaddr("ethaddr", (u8 *)eth_addr);
+	}
+	else {
+		printf("Could not read MAC address from OTP\n");
+	}
 #endif
 
 #ifndef CONFIG_DM_ETH
