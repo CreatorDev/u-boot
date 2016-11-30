@@ -16,6 +16,7 @@ endif
 obj-$(CONFIG_SPI_FLASH) += sf_probe.o
 #endif
 obj-$(CONFIG_CMD_SF) += sf.o
+obj-$(CONFIG_WINBOND_OTP) += winbond-otp.o
 obj-$(CONFIG_SPI_FLASH) += sf_ops.o sf_params.o
 obj-$(CONFIG_SPI_FLASH_DATAFLASH) += sf_dataflash.o
 obj-$(CONFIG_SPI_FLASH_MTD) += sf_mtd.o
