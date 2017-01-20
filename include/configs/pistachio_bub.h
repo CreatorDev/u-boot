@@ -328,7 +328,11 @@
 	"saveenv;"
 
 #define FINAL_BOOTCOMMAND	\
-	"bootm $loadaddr#$fitconf || reset;"
+	"if test -n ${fitconf}; then " \
+		"bootm $loadaddr#$fitconf || reset;" \
+	"else "\
+		"bootm $loadaddr || reset;" \
+	"fi;"
 
 #define CONFIG_BOOTDELAY	2
 #define CONFIG_SYS_BOOTCOUNT_ADDR	0x18102120
@@ -346,7 +350,6 @@
 	"boot_partition=0\0"\
 	"bootlimit=5\0"\
 	"fitfile=fitImage\0"\
-	"fitconf=config@1\0"\
 	"bootm_verify=n\0"\
 	"rootpath=/srv/fs\0"\
 	"netroot=root=/dev/nfs rootfstype=nfs ip=dhcp\0"\
