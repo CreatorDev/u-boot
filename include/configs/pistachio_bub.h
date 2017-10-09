@@ -289,16 +289,13 @@
 #define BOOT_ENV_LEGACY \
 	"fdtaddr=0x0D000000\0"\
 	"fdtfile="PISTACHIO_BOARD_NAME".dtb\0"\
-	"legacy_bootfile=uImage\0"\
-	"legacy_nandroot=root=ubi0:rootfs rootfstype=ubifs\0"
+	"legacy_bootfile=uImage\0"
 
 #define NAND_BOOTCOMMAND_LEGACY	\
-	"setenv legacy_nandroot ubi.mtd=firmware$boot_partition $legacy_nandroot;"\
-	"setenv bootargs $console $earlycon $legacy_nandroot $bootextra $mtdparts panic=2;"\
-	"echo Loading legacy kernel from rootfs... && "\
+	"echo Loading legacy kernel (uImage) from rootfs... && "\
 	"ubifsload $loadaddr $bootdir$legacy_bootfile && "\
 	"ubifsload $fdtaddr $bootdir$fdtfile && "\
-	"bootm $loadaddr - $fdtaddr || "
+	"bootm $loadaddr - $fdtaddr || reset;"
 
 #else
 
@@ -307,18 +304,25 @@
 
 #endif
 
+/*
+ * Openwrt have squashfs rootfs but legacy and other variant uses ubifs
+ * rootfs. To make all compatible dont pass root= for kernel booting
+ * from kernel ubi volume. For others, pass root= to correctly identify
+ * rootfs filesystem.
+ */
 #define NAND_BOOTCOMMAND	\
-	"setenv nandroot ubi.mtd=firmware$boot_partition $nandroot;"\
-	"setenv bootargs $console $earlycon $nandroot $bootextra $mtdparts panic=2;"\
 	"echo Attempting to boot from firmware$boot_partition;"\
+	"setenv ubimtd ubi.mtd=firmware$boot_partition;"\
 	"ubi part firmware$boot_partition || reset;"\
 	"if ubi check kernel; then "\
 		"echo Loading kernel from volume...;"\
+		"setenv bootargs $console $earlycon $ubimtd $bootextra $mtdparts panic=2;"\
 		"ubi read $loadaddr kernel || reset;"\
 	"else "\
 		"echo Loading kernel from rootfs...;"\
+		"setenv bootargs $console $earlycon $ubimtd $nandroot $bootextra $mtdparts panic=2; && "\
 		"ubifsmount ubi:rootfs && "\
-		"ubifsload $loadaddr $bootdir$fitfile || "NAND_BOOTCOMMAND_LEGACY"reset;"\
+		"ubifsload $loadaddr $bootdir$fitfile || "NAND_BOOTCOMMAND_LEGACY" "\
 	"fi;"
 
 #define ALT_BOOTCOMMAND	\
@@ -355,7 +359,7 @@
 	"netroot=root=/dev/nfs rootfstype=nfs ip=dhcp\0"\
 	"usbroot=root=/dev/sda1\0"\
 	"mmcroot=root=/dev/mmcblk0p1\0"\
-	"nandroot=\0"\
+	"nandroot=root=ubi0:rootfs rootfstype=ubifs\0"\
 	"usbdev=0\0"\
 	"mmcdev=0\0"\
 	"usbboot="INIT_BOOTCOMMAND USB_BOOTCOMMAND FINAL_BOOTCOMMAND"\0"\
