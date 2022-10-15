@@ -15,8 +15,17 @@
 #include <openssl/ssl.h>
 #include <openssl/evp.h>
 
-#if OPENSSL_VERSION_NUMBER >= 0x10000000L
-#define HAVE_ERR_REMOVE_THREAD_STATE
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+void RSA_get0_key(const RSA *r,
+                 const BIGNUM **n, const BIGNUM **e, const BIGNUM **d)
+{
+   if (n != NULL)
+       *n = r->n;
+   if (e != NULL)
+       *e = r->e;
+   if (d != NULL)
+       *d = r->d;
+}
 #endif
 
 static int rsa_err(const char *msg)
@@ -152,9 +161,9 @@ static void rsa_remove(void)
 {
 	CRYPTO_cleanup_all_ex_data();
 	ERR_free_strings();
-#ifdef HAVE_ERR_REMOVE_THREAD_STATE
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L && OPENSSL_VERSION_NUMBER < 0x10100000L
 	ERR_remove_thread_state(NULL);
-#else
+#elif OPENSSL_VERSION_NUMBER < 0x10000000L
 	ERR_remove_state(0);
 #endif
 	EVP_cleanup();
@@ -210,7 +219,11 @@ static int rsa_sign_with_key(RSA *rsa, struct checksum_algo *checksum_algo,
 		ret = rsa_err("Could not obtain signature");
 		goto err_sign;
 	}
-	EVP_MD_CTX_cleanup(context);
+	#if OPENSSL_VERSION_NUMBER < 0x10100000L
+		EVP_MD_CTX_cleanup(context);
+	#else
+		EVP_MD_CTX_reset(context);
+	#endif
 	EVP_MD_CTX_destroy(context);
 	EVP_PKEY_free(key);
 
@@ -268,6 +281,7 @@ static int rsa_get_exponent(RSA *key, uint64_t *e)
 {
 	int ret;
 	BIGNUM *bn_te;
+	const BIGNUM *key_e;
 	uint64_t te;
 
 	ret = -EINVAL;
@@ -276,17 +290,18 @@ static int rsa_get_exponent(RSA *key, uint64_t *e)
 	if (!e)
 		goto cleanup;
 
-	if (BN_num_bits(key->e) > 64)
+	RSA_get0_key(key, NULL, &key_e, NULL);
+	if (BN_num_bits(key_e) > 64)
 		goto cleanup;
 
-	*e = BN_get_word(key->e);
+	*e = BN_get_word(key_e);
 
-	if (BN_num_bits(key->e) < 33) {
+	if (BN_num_bits(key_e) < 33) {
 		ret = 0;
 		goto cleanup;
 	}
 
-	bn_te = BN_dup(key->e);
+	bn_te = BN_dup(key_e);
 	if (!bn_te)
 		goto cleanup;
 
@@ -316,6 +331,7 @@ int rsa_get_params(RSA *key, uint64_t *exponent, uint32_t *n0_invp,
 {
 	BIGNUM *big1, *big2, *big32, *big2_32;
 	BIGNUM *n, *r, *r_squared, *tmp;
+	const BIGNUM *key_n;
 	BN_CTX *bn_ctx = BN_CTX_new();
 	int ret = 0;
 
@@ -337,7 +353,8 @@ int rsa_get_params(RSA *key, uint64_t *exponent, uint32_t *n0_invp,
 	if (0 != rsa_get_exponent(key, exponent))
 		ret = -1;
 
-	if (!BN_copy(n, key->n) || !BN_set_word(big1, 1L) ||
+	RSA_get0_key(key, NULL, &key_n, NULL);
+	if (!BN_copy(n, key_n) || !BN_set_word(big1, 1L) ||
 	    !BN_set_word(big2, 2L) || !BN_set_word(big32, 32L))
 		ret = -1;
 
