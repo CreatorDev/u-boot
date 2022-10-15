@@ -7,6 +7,8 @@ If you are using the toolchain produced by OpenWrt you must setup the environmen
 For the MIPS official toolchain see
 [here](https://community.imgtec.com/developers/mips/tools/codescape-mips-sdk/download-codescape-mips-sdk-essentials/).
 
+If building your own toolchain then note binutils-2.33.1 or earlier is required.
+
 ## Configure and build it
 	$ make CROSS_COMPILE=<toolchain-prefix> pistachio_marduk_defconfig
 	$ make CROSS_COMPILE=<toolchain-prefix>
